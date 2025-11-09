@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100 antialiased;
+}
+
+a {
+  @apply text-primary-400 hover:text-primary-300 transition-colors;
+}
+
+button:focus-visible,
+a:focus-visible {
+  @apply outline-none ring-2 ring-primary-400 ring-offset-2 ring-offset-slate-900;
+}
+
+
