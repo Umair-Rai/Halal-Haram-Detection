@@ -3,20 +3,20 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  /* color-scheme: light; */
 }
 
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  @apply bg-slate-50 text-slate-900 antialiased selection:bg-emerald-100 selection:text-emerald-900;
 }
 
 a {
-  @apply text-primary-400 hover:text-primary-300 transition-colors;
+  @apply text-emerald-600 hover:text-emerald-700 transition-colors;
 }
 
 button:focus-visible,
 a:focus-visible {
-  @apply outline-none ring-2 ring-primary-400 ring-offset-2 ring-offset-slate-900;
+  @apply outline-none ring-2 ring-emerald-500 ring-offset-2 ring-offset-white;
 }
 
 

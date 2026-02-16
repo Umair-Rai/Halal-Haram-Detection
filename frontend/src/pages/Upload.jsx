@@ -1,12 +1,28 @@
 import { useState } from "react";
+import { UploadCloud, FileImage, AlertCircle, CheckCircle, HelpCircle, XCircle, Search, ScanLine } from "lucide-react";
 import { analyzeProduct } from "../api/client.js";
-import { PrimaryButton } from "../components/PrimaryButton.jsx";
 
-const statusColors = {
-  halal: "text-emerald-400 bg-emerald-500/10",
-  haram: "text-rose-400 bg-rose-500/10",
-  doubtful: "text-amber-400 bg-amber-500/10",
-  unknown: "text-slate-300 bg-slate-700/30",
+const statusConfig = {
+  halal: {
+    color: "text-emerald-700 bg-emerald-50 border-emerald-100",
+    icon: CheckCircle,
+    label: "Halal",
+  },
+  haram: {
+    color: "text-rose-700 bg-rose-50 border-rose-100",
+    icon: XCircle,
+    label: "Haram",
+  },
+  doubtful: {
+    color: "text-amber-700 bg-amber-50 border-amber-100",
+    icon: HelpCircle,
+    label: "Mushbooh",
+  },
+  unknown: {
+    color: "text-slate-600 bg-slate-100 border-slate-200",
+    icon: HelpCircle,
+    label: "Unknown",
+  },
 };
 
 export function UploadPage() {
@@ -17,9 +33,6 @@ export function UploadPage() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    console.log("Form submitted");
-    console.log("Selected file:", selectedFile);
-
     if (!selectedFile) {
       setError("Please choose an image to upload.");
       return;
@@ -30,9 +43,7 @@ export function UploadPage() {
     setResult(null);
 
     try {
-      console.log("Calling analyzeProduct...");
       const response = await analyzeProduct(selectedFile);
-      console.log("Response received:", response);
       setResult(response);
     } catch (err) {
       console.error("Error during analysis:", err);
@@ -42,115 +53,169 @@ export function UploadPage() {
     }
   };
 
-  const statusClass = result ? statusColors[result.status] ?? statusColors.unknown : "";
+  const currentStatus = result ? statusConfig[result.status] ?? statusConfig.unknown : null;
+  const StatusIcon = currentStatus?.icon;
 
   return (
-    <section id="upload" className="bg-slate-950">
-      <div className="mx-auto w-full max-w-5xl px-4 py-12">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr,0.9fr]">
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-subtle backdrop-blur"
-          >
-            <h2 className="text-2xl font-semibold text-slate-100">Upload a product label</h2>
-            <p className="mt-3 text-sm text-slate-300/90">
-              Supported formats: JPG, PNG, HEIC. For best results capture the ingredients panel in sharp focus.
-            </p>
+    <section className="bg-slate-50 py-12 md:py-20 min-h-[calc(100vh-64px)]">
+      <div className="mx-auto w-full max-w-5xl px-4">
+        <div className="grid gap-8 lg:grid-cols-[1.2fr,0.8fr] lg:gap-12">
 
-            <label
-              htmlFor="file-upload"
-              className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-primary-500/40 bg-primary-500/5 px-6 py-12 text-center transition hover:border-primary-500/70"
-            >
-              <span className="text-sm font-medium text-primary-200">
-                {selectedFile ? selectedFile.name : "Click to choose or drag a file here"}
-              </span>
-              <span className="mt-2 text-xs text-slate-400">Max 10 MB • Images only</span>
-              <input
-                id="file-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  setSelectedFile(file ?? null);
-                }}
-              />
-            </label>
+          {/* Left Column: Upload Form */}
+          <div>
+            <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-100">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-slate-900">Scan Product</h1>
+                <p className="mt-2 text-slate-600">
+                  Upload a clear image of the ingredients list. We support JPG, PNG, and HEIC formats.
+                </p>
+              </div>
 
-            <PrimaryButton type="submit" className="mt-8 w-full" disabled={isLoading}>
-              {isLoading ? "Analysing..." : "Analyse product"}
-            </PrimaryButton>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <label
+                  htmlFor="file-upload"
+                  className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 transition-all duration-300
+                    ${selectedFile
+                      ? "border-emerald-500 bg-emerald-50/30"
+                      : "border-slate-300 bg-slate-50 hover:border-emerald-400 hover:bg-emerald-50/30"
+                    }`}
+                >
+                  <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-110
+                    ${selectedFile ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-400 group-hover:bg-emerald-100 group-hover:text-emerald-600"}`}>
+                    {selectedFile ? <FileImage size={32} /> : <UploadCloud size={32} />}
+                  </div>
 
-            {error && <p className="mt-4 text-sm text-rose-400">{error}</p>}
-          </form>
+                  <div className="text-center">
+                    <span className="text-lg font-semibold text-slate-900 block mb-1">
+                      {selectedFile ? selectedFile.name : "Click to upload"}
+                    </span>
+                    <span className="text-sm text-slate-500">
+                      {selectedFile ? "Click to change file" : "or drag and drop here"}
+                    </span>
+                  </div>
 
+                  <input
+                    id="file-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      setSelectedFile(file ?? null);
+                      setError("");
+                    }}
+                  />
+                </label>
+
+                {error && (
+                  <div className="flex items-center gap-2 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    <AlertCircle size={16} />
+                    <p>{error}</p>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isLoading || !selectedFile}
+                  className="inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:bg-emerald-700 hover:shadow-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <>
+                      <ScanLine className="mr-2 h-5 w-5 animate-spin" />
+                      Analysing...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-5 w-5" />
+                      Analyse Ingredients
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Right Column: Results & Info */}
           <div className="space-y-6">
             {!result && (
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-8">
-                <h3 className="text-lg font-semibold text-slate-100">What to expect</h3>
-                <ul className="mt-4 space-y-3 text-sm text-slate-300/85">
-                  <li>
-                    <span className="font-medium text-primary-200">1.</span> If a halal logo is detected the verdict is
-                    instant.
-                  </li>
-                  <li>
-                    <span className="font-medium text-primary-200">2.</span> Otherwise we run OCR and parse the
-                    ingredients list automatically.
-                  </li>
-                  <li>
-                    <span className="font-medium text-primary-200">3.</span> The final verdict compares the list against
-                    our curated knowledge base.
-                  </li>
+              <div className="rounded-3xl bg-white p-8 shadow-sm border border-slate-100 h-full">
+                <h3 className="text-lg font-bold text-slate-900 mb-6">How it works</h3>
+                <ul className="space-y-6">
+                  {[
+                    { title: "Scan Label", desc: "Upload a photo of the product", icon: ScanLine },
+                    { title: "Detect Logos", desc: "We check for certified halal marks", icon: CheckCircle },
+                    { title: "Smart Analysis", desc: "AI reads ingredients and checks our database", icon: Search },
+                  ].map((item, i) => (
+                    <li key={i} className="flex gap-4">
+                      <div className="flex-shrink-0 mt-1">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 font-bold text-sm">
+                          {i + 1}
+                        </div>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-slate-900">{item.title}</h4>
+                        <p className="text-sm text-slate-500">{item.desc}</p>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
 
-            {result && (
-              <div className="space-y-6">
-                <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-6 shadow-subtle">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs uppercase tracking-widest text-slate-400">Final verdict</p>
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}>
-                      {result.status.toUpperCase()}
-                    </span>
+            {result && currentStatus && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Main Verdict Card */}
+                <div className={`rounded-3xl p-8 border shadow-sm ${currentStatus.color}`}>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest opacity-70 mb-1">Final Verdict</p>
+                      <h2 className="text-3xl font-extrabold">{currentStatus.label}</h2>
+                    </div>
+                    {StatusIcon && <StatusIcon size={48} className="opacity-20" />}
                   </div>
-                  <p className="mt-4 text-sm text-slate-300/90">{result.matched_text}</p>
-                  {!result.logo_detected && (
-                    <p className="mt-3 text-xs text-slate-400">
-                      Semantic match score: {(result.score * 100).toFixed(1)}%
+
+                  <div className="mt-6 pt-6 border-t border-black/5">
+                    <p className="font-medium text-lg leading-snug">
+                      {result.matched_text}
                     </p>
-                  )}
+                    {!result.logo_detected && (
+                      <div className="mt-4 flex items-center gap-2 text-sm opacity-80">
+                        <span className="font-semibold">{Math.round(result.score * 100)}%</span>
+                        confidence score
+                      </div>
+                    )}
+                  </div>
                 </div>
 
+                {/* Additional Details */}
                 {!result.logo_detected && result.ingredients?.length > 0 && (
-                  <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-                    <p className="text-sm font-semibold text-primary-200">Ingredients detected</p>
-                    <ul className="mt-3 flex flex-wrap gap-2">
+                  <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
+                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide mb-4">Detected Ingredients</h3>
+                    <div className="flex flex-wrap gap-2">
                       {result.ingredients.map((item, idx) => (
-                        <li key={`${item}-${idx}`} className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-200">
+                        <span key={idx} className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
                           {item}
-                        </li>
+                        </span>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
 
-                {result.ingredients_block && (
-                  <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-                    <p className="text-sm font-semibold text-primary-200">Raw ingredients block</p>
-                    <p className="mt-3 whitespace-pre-wrap text-sm text-slate-300/90">{result.ingredients_block}</p>
-                  </div>
-                )}
-
+                {/* OCR Debug Toggle */}
                 {result.ocr_text && (
-                  <details className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6">
-                    <summary className="cursor-pointer text-sm font-semibold text-primary-200">
-                      Full OCR transcript
-                    </summary>
-                    <pre className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap text-xs text-slate-300/80">
-                      {result.ocr_text}
-                    </pre>
-                  </details>
+                  <div className="rounded-3xl bg-white shadow-sm border border-slate-100 overflow-hidden">
+                    <details className="group">
+                      <summary className="flex cursor-pointer items-center justify-between p-6 hover:bg-slate-50">
+                        <span className="text-sm font-semibold text-slate-900">View Full Text</span>
+                        <Search size={16} className="text-slate-400 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="bg-slate-50 p-6 pt-0 border-t border-slate-100">
+                        <pre className="whitespace-pre-wrap text-xs text-slate-500 font-mono leading-relaxed mt-4">
+                          {result.ocr_text}
+                        </pre>
+                      </div>
+                    </details>
+                  </div>
                 )}
               </div>
             )}
